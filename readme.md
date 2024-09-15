@@ -1,20 +1,29 @@
 # Transkryptor
 
 ## Table des matières
-1. [Introduction](#introduction)
-2. [Fonctionnalités](#fonctionnalités)
-3. [Architecture technique](#architecture-technique)
-4. [Installation](#installation)
-5. [Configuration](#configuration)
-6. [Utilisation](#utilisation)
-7. [API](#api)
-8. [Gestion des erreurs et journalisation](#gestion-des-erreurs-et-journalisation)
-9. [Considérations de sécurité](#considérations-de-sécurité)
-10. [Performances et optimisation](#performances-et-optimisation)
-11. [Dépannage](#dépannage)
-12. [Contributions](#contributions)
-13. [Feuille de route](#feuille-de-route)
-14. [Licence](#licence)
+- [Transkryptor](#transkryptor)
+  - [Table des matières](#table-des-matières)
+  - [Introduction](#introduction)
+  - [Fonctionnalités](#fonctionnalités)
+  - [Architecture technique](#architecture-technique)
+    - [Frontend](#frontend)
+    - [Backend](#backend)
+    - [APIs externes](#apis-externes)
+    - [Architecture des fichiers](#architecture-des-fichiers)
+  - [Installation](#installation)
+  - [Configuration](#configuration)
+    - [Clés API](#clés-api)
+    - [Configuration du serveur](#configuration-du-serveur)
+  - [Utilisation](#utilisation)
+  - [API](#api)
+    - [POST /test-keys](#post-test-keys)
+    - [POST /analyze](#post-analyze)
+  - [Gestion des erreurs et journalisation](#gestion-des-erreurs-et-journalisation)
+  - [Considérations de sécurité](#considérations-de-sécurité)
+  - [Performances et optimisation](#performances-et-optimisation)
+  - [Dépannage](#dépannage)
+  - [Contributions](#contributions)
+  - [Feuille de route](#feuille-de-route)
 
 ## Introduction
 
@@ -219,8 +228,3 @@ Fonctionnalités futures envisagées :
 - Stockage des transcriptions et analyses dans une base de données
 - Fonctionnalités d'édition de transcription
 - Support multilingue pour la transcription et l'analyse
-
-## Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
-
