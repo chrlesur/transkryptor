@@ -95,6 +95,8 @@ Transkryptor est une application web sophistiquée conçue pour faciliter la tra
    export PORT=3000
    ```
 
+Note : Le port par défaut est 3000, mais vous pouvez le changer en définissant la variable d'environnement PORT.
+
 4. Assurez-vous que votre structure de fichiers est correcte :
    ```
    transkryptor/
@@ -129,7 +131,7 @@ Le serveur utilise les variables d'environnement suivantes :
 
 ## Utilisation
 
-1. Ouvrez votre navigateur et accédez à `http://localhost:3000` (ou le port que vous avez configuré)
+1. Ouvrez votre navigateur et accédez à `http://localhost:3000` (ou l'ip et le port que vous avez configuré)
 2. **Configuration des clés API**
    - Entrez vos clés API OpenAI et Anthropic dans les champs correspondants
    - Cliquez sur "Tester les clés API" pour valider vos clés
@@ -230,6 +232,8 @@ En cas d'erreur, le serveur renvoie des réponses JSON détaillées, incluant un
 - Si les clés API échouent au test, vérifiez qu'elles sont correctement copiées et qu'elles n'ont pas expiré.
 - En cas d'erreur lors de la transcription ou de l'analyse, consultez les journaux du serveur pour plus de détails.
 - Si le serveur ne démarre pas, assurez-vous qu'aucune autre application n'utilise le port spécifié.
+- Si vous changez le port via la variable d'environnement PORT, assurez-vous de redémarrer le serveur pour que les changements prennent effet.
+- Vérifiez que le port affiché dans la console du serveur correspond à celui que vous utilisez pour accéder à l'application dans votre navigateur.
 
 ## Contributions
 

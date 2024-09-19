@@ -3,11 +3,11 @@ const cors = require('cors');
 const axios = require('axios');
 const { encode } = require('gpt-3-encoder');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
 
 function getTimestamp() {
     return new Date().toISOString().replace('T', ' ').substr(0, 19);
@@ -104,10 +104,41 @@ app.post('/analyze', async (req, res) => {
     }
 });
 
-// Nouvelle route pour servir index.html
+// Route pour servir index.html avec le port et l'hôte injectés
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    
+    if (!fs.existsSync(indexPath)) {
+        log(`Erreur: Le fichier ${indexPath} n'existe pas.`);
+        return res.status(404).send('Fichier index.html non trouvé');
+    }
+
+    fs.readFile(indexPath, 'utf8', (err, data) => {
+        if (err) {
+            log(`Erreur lors de la lecture de index.html: ${err}`);
+            return res.status(500).send('Erreur serveur lors de la lecture du fichier');
+        }
+        
+        const host = req.get('host').split(':')[0]; // Récupère le nom d'hôte sans le port
+        const scriptToInject = `<script>
+            const SERVER_HOST = "${host}";
+            const SERVER_PORT = ${PORT};
+            const API_URL = "http://${host}:${PORT}";
+        </script>`;
+        
+        const modifiedHtml = data.replace('</head>', `${scriptToInject}</head>`);
+        
+        if (modifiedHtml.includes(scriptToInject)) {
+            log('Injection des informations serveur réussie');
+        } else {
+            log('Attention: L\'injection des informations serveur a échoué');
+        }
+        
+        res.send(modifiedHtml);
+    });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => log(`Serveur démarré sur le port ${PORT}`));
+app.listen(PORT, () => {
+    log(`Serveur démarré sur le port ${PORT}`);
+});

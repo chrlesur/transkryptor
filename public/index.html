@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transkryptor</title>
+    <title>Transkryptor 1.1.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.3.4/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -193,7 +193,7 @@
             }
 
             try {
-                const response = await axios.post("http://localhost:3000/test-keys", {
+                const response = await axios.post(`${API_URL}/test-keys`, {
                     openaiKey,
                     anthropicKey
                 });
@@ -221,7 +221,7 @@
                 }
 
                 // Test silencieux des clés API
-                const response = await axios.post("http://localhost:3000/test-keys", {
+                const response = await axios.post(`${API_URL}/test-keys`, {
                     openaiKey,
                     anthropicKey
                 });
@@ -464,7 +464,7 @@
                     ${batches[i]}
                     `;
 
-                    const response = await axios.post('http://localhost:3000/analyze', {
+                    const response = await axios.post('${API_URL}/analyze', {
                         prompt,
                         apiKey: anthropicKey
                     });
@@ -509,7 +509,7 @@
                 `;
 
                 log("Envoi de la demande de synthèse...");
-                const response = await axios.post('http://localhost:3000/analyze', {
+                const response = await axios.post('${API_URL}/analyze', {
                     prompt,
                     apiKey: anthropicKey
                 });
