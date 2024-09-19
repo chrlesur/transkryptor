@@ -16,6 +16,7 @@
     - [Configuration du serveur](#configuration-du-serveur)
   - [Utilisation](#utilisation)
   - [API](#api)
+    - [GET /](#get-)
     - [POST /test-keys](#post-test-keys)
     - [POST /analyze](#post-analyze)
   - [Gestion des erreurs et journalisation](#gestion-des-erreurs-et-journalisation)
@@ -65,6 +66,7 @@ Transkryptor est une application web sophistiquée conçue pour faciliter la tra
   - `cors` pour la gestion des requêtes cross-origin
   - `axios` pour les requêtes HTTP
   - `gpt-3-encoder` pour le comptage des tokens
+  - `path` pour la gestion des chemins de fichiers
 
 ### APIs externes
 - OpenAI API pour la transcription (non implémentée dans le code fourni, mais mentionnée dans l'interface)
@@ -72,7 +74,8 @@ Transkryptor est une application web sophistiquée conçue pour faciliter la tra
 
 ### Architecture des fichiers
 - `server.js`: Serveur backend Express
-- `transkryptor.html`: Interface utilisateur frontend
+- `public/index.html`: Interface utilisateur frontend
+- `public/`: Dossier contenant tous les fichiers statiques (CSS, JS, etc.)
 
 ## Installation
 
@@ -92,12 +95,26 @@ Transkryptor est une application web sophistiquée conçue pour faciliter la tra
    export PORT=3000
    ```
 
-4. Lancez le serveur :
+4. Assurez-vous que votre structure de fichiers est correcte :
+   ```
+   transkryptor/
+   │
+   ├── public/
+   │   ├── index.html
+   │   ├── styles.css (si vous en avez un)
+   │   └── script.js (si vous en avez un)
+   │
+   ├── server.js
+   ├── package.json
+   └── ... (autres fichiers et dossiers)
+   ```
+
+5. Lancez le serveur :
    ```
    node server.js
    ```
 
-5. Ouvrez `transkryptor.html` dans un navigateur web
+6. Ouvrez votre navigateur et accédez à `http://localhost:3000` (ou le port que vous avez configuré)
 
 ## Configuration
 
@@ -112,27 +129,31 @@ Le serveur utilise les variables d'environnement suivantes :
 
 ## Utilisation
 
-1. **Configuration des clés API**
+1. Ouvrez votre navigateur et accédez à `http://localhost:3000` (ou le port que vous avez configuré)
+2. **Configuration des clés API**
    - Entrez vos clés API OpenAI et Anthropic dans les champs correspondants
    - Cliquez sur "Tester les clés API" pour valider vos clés
 
-2. **Transcription**
+3. **Transcription**
    - Cliquez sur "Fichier audio (M4A)" pour sélectionner un fichier audio
    - Appuyez sur "Transcrire" pour lancer la transcription
    - Suivez la progression dans les barres de progression
 
-3. **Analyse**
+4. **Analyse**
    - Une fois la transcription terminée, cliquez sur "Analyser la transcription"
    - L'analyse apparaîtra dans la section "Analyse"
 
-4. **Synthèse**
+5. **Synthèse**
    - Après l'analyse, cliquez sur "Synthétiser l'analyse"
    - La synthèse sera affichée dans la section "Synthèse"
 
-5. **Téléchargement**
+6. **Téléchargement**
    - Utilisez les boutons "Télécharger" pour sauvegarder la transcription, l'analyse ou la synthèse
 
 ## API
+
+### GET /
+Sert la page d'accueil de l'application (index.html).
 
 ### POST /test-keys
 Teste la validité des clés API fournies.
@@ -204,6 +225,8 @@ En cas d'erreur, le serveur renvoie des réponses JSON détaillées, incluant un
 
 ## Dépannage
 
+- Si l'application ne se charge pas dans le navigateur, assurez-vous que le serveur est en cours d'exécution et que vous accédez à la bonne adresse (http://localhost:3000 par défaut).
+- Vérifiez que tous les fichiers statiques (HTML, CSS, JS) sont correctement placés dans le dossier `public/`.
 - Si les clés API échouent au test, vérifiez qu'elles sont correctement copiées et qu'elles n'ont pas expiré.
 - En cas d'erreur lors de la transcription ou de l'analyse, consultez les journaux du serveur pour plus de détails.
 - Si le serveur ne démarre pas, assurez-vous qu'aucune autre application n'utilise le port spécifié.
@@ -228,3 +251,4 @@ Fonctionnalités futures envisagées :
 - Stockage des transcriptions et analyses dans une base de données
 - Fonctionnalités d'édition de transcription
 - Support multilingue pour la transcription et l'analyse
+- Optimisation des performances pour le traitement de fichiers volumineux
