@@ -78,7 +78,7 @@ Transkryptor est une application web sophistiquée conçue pour faciliter la tra
 
 1. Clonez le dépôt :
    ```
-   git clone https://github.com/votre-username/transkryptor.git
+   git clone https://github.com/chrlesur/transkryptor.git
    cd transkryptor
    ```
 
