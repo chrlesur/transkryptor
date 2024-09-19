@@ -464,7 +464,7 @@
                     ${batches[i]}
                     `;
 
-                    const response = await axios.post('${API_URL}/analyze', {
+                    const response = await axios.post(`${API_URL}/analyze`, {
                         prompt,
                         apiKey: anthropicKey
                     });
@@ -509,7 +509,7 @@
                 `;
 
                 log("Envoi de la demande de synthèse...");
-                const response = await axios.post('${API_URL}/analyze', {
+                const response = await axios.post(`${API_URL}/analyze`, {
                     prompt,
                     apiKey: anthropicKey
                 });
