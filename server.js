@@ -2,10 +2,12 @@ const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
 const { encode } = require('gpt-3-encoder');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 
 function getTimestamp() {
     return new Date().toISOString().replace('T', ' ').substr(0, 19);
@@ -100,6 +102,11 @@ app.post('/analyze', async (req, res) => {
             details: error.response ? error.response.data : null 
         });
     }
+});
+
+// Nouvelle route pour servir index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
