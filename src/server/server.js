@@ -11,7 +11,7 @@ const Logger = require('./logger');
 const app = express();
 
 // --- Lecture de la version depuis le fichier VERSION ---
-let APP_VERSION = '6.1.2';
+let APP_VERSION = '6.2.0';
 try {
     APP_VERSION = fs.readFileSync(path.join(__dirname, '../../VERSION'), 'utf-8').trim();
 } catch (e) {
@@ -65,6 +65,57 @@ function hasConfiguredModelAllowlist() {
 
 function isAllowedModel(modelId) {
     return ALLOWED_MODEL_INDEX.has(normalizeModelId(modelId));
+}
+
+// Modèles reasoning dont la réponse arrive par défaut dans message.reasoning
+// au lieu de message.content. Le paramètre enable_thinking casse les tokenizers
+// Mistral côté Cloud Temple, donc il reste limité aux familles explicitement
+// connues pour en avoir besoin.
+const THINKING_MODEL_PATTERNS = [/^qwen/i];
+
+function isThinkingModel(modelId) {
+    return THINKING_MODEL_PATTERNS.some(pattern => pattern.test(String(modelId || '').trim()));
+}
+
+function buildChatCompletionPayload({ model, messages, maxTokens, stream = false }) {
+    const payload = {
+        model,
+        messages,
+        max_tokens: maxTokens,
+    };
+
+    if (stream) {
+        payload.stream = true;
+    }
+
+    if (isThinkingModel(model)) {
+        payload.enable_thinking = false;
+    }
+
+    return payload;
+}
+
+function safeStringify(value) {
+    try {
+        return JSON.stringify(value);
+    } catch (_) {
+        return String(value);
+    }
+}
+
+function safeErrorDetails(error) {
+    if (error && error.response && error.response.data !== undefined) {
+        return safeStringify(error.response.data);
+    }
+    return error && error.message ? error.message : String(error);
+}
+
+function logRequestError(clientId, message, error) {
+    const details = safeErrorDetails(error);
+    const suffix = details && (!error || details !== error.message)
+        ? ` | détails API: ${details}`
+        : '';
+    Logger.error(clientId, `${message}${suffix}`, error);
 }
 
 function hasModelIdentifier(model, modelId) {
@@ -261,10 +312,10 @@ app.post('/api/transcribe', upload.single('file'), async (req, res) => {
     } catch (error) {
         const duration = Date.now() - startTime;
         Logger.logOperation(clientId, 'TRANSCRIPTION', { chunkIndex, totalChunks }, 'ERROR', duration);
-        Logger.error(clientId, `Erreur transcription chunk ${chunkIndex}`, error);
+        logRequestError(clientId, `Erreur transcription chunk ${chunkIndex}`, error);
         res.status(500).json({ 
             error: 'Erreur interne du serveur lors de la transcription',
-            details: error.response ? error.response.data : error.message
+            details: safeErrorDetails(error)
         });
     } finally {
         if (file && file.path) {
@@ -307,16 +358,11 @@ app.post('/api/analyze', async (req, res) => {
 
     try {
         Logger.info(clientId, `Analyse avec Cloud Temple (modèle: ${model}${code ? `, langue: ${code}` : ''})...`);
-        const response = await axios.post('https://api.ai.cloud-temple.com/v1/chat/completions', {
-            model: model,
+        const response = await axios.post('https://api.ai.cloud-temple.com/v1/chat/completions', buildChatCompletionPayload({
+            model,
             messages: [{ role: 'user', content: userContent }],
-            max_tokens: 16384,
-            // Désactive le mode "thinking" sur les modèles reasoning type qwen3.6 :
-            // sans ça, la réponse arrive dans message.reasoning (pas .content) et
-            // notre code ne la lit pas. Paramètre ignoré silencieusement par les
-            // autres modèles (Mistral, Gemma, Qwen non-thinking).
-            enable_thinking: false
-        }, {
+            maxTokens: 16384,
+        }), {
             headers: { 'Authorization': `Bearer ${process.env.CLOUD_TEMPLE_API_KEY}` }
         });
 
@@ -328,10 +374,10 @@ app.post('/api/analyze', async (req, res) => {
     } catch (error) {
         const duration = Date.now() - startTime;
         Logger.logOperation(clientId, 'ANALYSE', { chunkIndex, totalChunks, textPreview }, 'ERROR', duration);
-        Logger.error(clientId, `Erreur lors de l'analyse`, error);
+        logRequestError(clientId, `Erreur lors de l'analyse`, error);
         res.status(500).json({ 
             error: 'Erreur interne du serveur lors de l\'analyse',
-            details: error.response ? error.response.data : error.message
+            details: safeErrorDetails(error)
         });
     }
 });
@@ -453,12 +499,11 @@ app.post('/api/synthesize', async (req, res) => {
 
     try {
         Logger.info(clientId, `Synthèse avec Cloud Temple (modèle: ${model})...`);
-        const response = await axios.post('https://api.ai.cloud-temple.com/v1/chat/completions', {
-            model: model,
+        const response = await axios.post('https://api.ai.cloud-temple.com/v1/chat/completions', buildChatCompletionPayload({
+            model,
             messages: [{ role: 'user', content: fullPrompt }],
-            max_tokens: 8192,
-            enable_thinking: false
-        }, {
+            maxTokens: 8192,
+        }), {
             headers: { 'Authorization': `Bearer ${process.env.CLOUD_TEMPLE_API_KEY}` }
         });
 
@@ -471,10 +516,10 @@ app.post('/api/synthesize', async (req, res) => {
     } catch (error) {
         const duration = Date.now() - startTime;
         Logger.logOperation(clientId, 'SYNTHESE', { model, targetLanguage: targetLanguage || 'fr' }, 'ERROR', duration);
-        Logger.error(clientId, `Erreur lors de la synthèse`, error);
+        logRequestError(clientId, `Erreur lors de la synthèse`, error);
         res.status(500).json({
             error: 'Erreur interne du serveur lors de la synthèse',
-            details: error.response ? error.response.data : error.message
+            details: safeErrorDetails(error)
         });
     }
 });
@@ -673,13 +718,12 @@ app.post('/api/diarize', async (req, res) => {
     Logger.info(clientId, `Diarization LLM-based en streaming (modèle: ${model})... ${(segments || []).length} segments.`);
 
     try {
-        const llmRes = await axios.post('https://api.ai.cloud-temple.com/v1/chat/completions', {
+        const llmRes = await axios.post('https://api.ai.cloud-temple.com/v1/chat/completions', buildChatCompletionPayload({
             model,
             messages: [{ role: 'user', content: basePrompt }],
-            max_tokens: 16384,
+            maxTokens: 16384,
             stream: true,
-            enable_thinking: false,
-        }, {
+        }), {
             headers: { 'Authorization': `Bearer ${process.env.CLOUD_TEMPLE_API_KEY}` },
             responseType: 'stream',
         });
@@ -829,10 +873,10 @@ app.post('/api/diarize', async (req, res) => {
 
     } catch (error) {
         Logger.logOperation(clientId, 'DIARIZATION', { model }, 'ERROR', Date.now() - startTime);
-        Logger.error(clientId, `Erreur diarization (init stream)`, error);
+        logRequestError(clientId, `Erreur diarization (init stream)`, error);
         sendEvent('error', {
             message: 'Erreur interne lors du démarrage de la diarization.',
-            details: error.response ? JSON.stringify(error.response.data || {}) : error.message
+            details: safeErrorDetails(error)
         });
         cleanup();
     }
@@ -842,6 +886,15 @@ app.post('/api/diarize', async (req, res) => {
 app.get('*', renderIndex);
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    Logger.success('server', `Transkryptor v${APP_VERSION} démarré sur le port ${PORT} (brand: ${BRAND})`);
-});
+if (require.main === module) {
+    app.listen(PORT, () => {
+        Logger.success('server', `Transkryptor v${APP_VERSION} démarré sur le port ${PORT} (brand: ${BRAND})`);
+    });
+}
+
+module.exports = {
+    app,
+    buildChatCompletionPayload,
+    isThinkingModel,
+    safeErrorDetails,
+};
