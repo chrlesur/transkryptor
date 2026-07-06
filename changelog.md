@@ -11,6 +11,36 @@ Older entries are therefore less detailed than entries maintained from 5.1.0 onw
 
 ## [Unreleased]
 
+## [6.2.0] - 2026-07-06
+
+Transkryptor v6.2.0 fixes a production regression where Mistral chat-completion
+models rejected the `enable_thinking` parameter introduced for Qwen reasoning
+models.
+
+### Added
+
+- Release notes document at `docs/releases/v6.2.0.md`.
+- Docker-runnable regression check for Cloud Temple chat-completion payload
+construction.
+
+### Changed
+
+- `enable_thinking: false` is now sent only for explicitly known thinking model
+  families (`qwen*`) instead of being attached to every analysis, synthesis,
+  and diarization request.
+- API error logging now includes safely serialized Cloud Temple response bodies
+  when available, making HTTP 400 diagnostics visible in application logs.
+- Bumped application metadata and client/server fallback versions to `6.2.0`.
+- Updated README installer URLs to target the `v6.2.0` tag.
+
+### Fixed
+
+- Restored `/api/analyze`, `/api/synthesize`, and `/api/diarize` compatibility
+  with `mistral-small4:119b`, whose tokenizer rejects `enable_thinking` with
+  HTTP 400 (`chat_template is not supported for Mistral tokenizers`).
+- Prevented the diarization startup error handler from crashing on circular
+  Axios response objects while serializing error details.
+
 ## [6.1.2] - 2026-06-25
 
 Transkryptor v6.1.2 is a configuration hotfix that refreshes the sample Cloud
@@ -359,7 +389,8 @@ LLM-based participant detection.
 
 - Released the v2.0.0 final version.
 
-[Unreleased]: https://github.com/Lesur-ai/transkryptor/compare/v6.1.2...HEAD
+[Unreleased]: https://github.com/Lesur-ai/transkryptor/compare/v6.2.0...HEAD
+[6.2.0]: https://github.com/Lesur-ai/transkryptor/compare/v6.1.2...v6.2.0
 [6.1.2]: https://github.com/Lesur-ai/transkryptor/compare/v6.1.1...v6.1.2
 [6.1.1]: https://github.com/Lesur-ai/transkryptor/compare/v6.1.0...v6.1.1
 [6.1.0]: https://github.com/Lesur-ai/transkryptor/compare/v6.0.0...v6.1.0
